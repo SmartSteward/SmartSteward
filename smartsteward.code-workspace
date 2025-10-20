@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "raspi-client"
+    },
+    {
+      "path": "../py-xiaozhi"
+    }
+  ],
+  "settings": {}
+}
