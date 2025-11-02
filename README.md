@@ -42,10 +42,12 @@
 ### 机器人
 
 * 树莓派...
+* [py-xiaozhi](https://github.com/huangjunsen0406/py-xiaozhi)
 
 ### 监护人页面
 
 * 前端...
+* [home-assistant](https://github.com/home-assistant)
 
 ### 智能家居
 
