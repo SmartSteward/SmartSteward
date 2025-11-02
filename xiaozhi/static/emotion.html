@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XiaoZhi Emotion Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        .emotion-container {
+            font-size: 30vw;
+            text-align: center;
+            user-select: none;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .emotion {
+            transition: all 0.3s ease;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #333;
+            color: white;
+            font-size: 16px;
+        }
+        
+        #send-button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .output-area {
+            margin-top: 20px;
+        }
+        
+        #model-output {
+            background-color: #333;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .output-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="emotion-container">
+        <div id="emotion" class="emotion">😐</div>
+    </div>
+    
+    <div class="chat-container">
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="请输入您的消息..." />
+            <button id="send-button">发送</button>
+        </div>
+        
+        <div class="output-area">
+            <div class="output-label">模型输出:</div>
+            <div id="model-output"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        
+        function connect() {
+            ws = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            ws.onopen = function(event) {
+                console.log("Connected to WebSocket");
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("收到消息:", data);
+                handleServerMessage(data);
+            };
+            
+            ws.onclose = function(event) {
+                console.log("WebSocket connection closed");
+                // 尝试重新连接
+                setTimeout(connect, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.log("WebSocket error: " + error);
+            };
+        }
+        
+        function handleServerMessage(message) {
+            console.log("处理消息:", message);
+            // 根据情绪状态显示不同的表情
+            // 当接收到 emotion_update 类型的消息时，更新表情显示
+            if (message.type === 'emotion_update') {
+                const emotionElement = document.getElementById('emotion');
+                // 根据情绪状态显示不同的表情
+                switch(message.data.emotion) {
+                    case 'happy':
+                        // 高兴时显示笑脸表情
+                        // 随机选择一个高兴的表情
+                        const happyEmojis = ['😊', '😄', '😃', '😀', '😁', '😆', '😅', '😂', '🤣', '☺️', '😊', '😇', '🥰', '😍', '🤩'];
+                        emotionElement.textContent = happyEmojis[Math.floor(Math.random() * happyEmojis.length)];
+                        break;
+                    case 'sad':
+                        // 伤心时显示哭脸表情
+                        // 随机选择一个伤心的表情
+                        const sadEmojis = ['😢', '😭', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭'];
+                        emotionElement.textContent = sadEmojis[Math.floor(Math.random() * sadEmojis.length)];
+                        break;
+                    case 'angry':
+                        // 生气时显示愤怒表情
+                        // 随机选择一个愤怒的表情
+                        const angryEmojis = ['😠', '😡', '🤬', '😤', '💢', '😠', '👿', '💀', '🔥'];
+                        emotionElement.textContent = angryEmojis[Math.floor(Math.random() * angryEmojis.length)];
+                        break;
+                    case 'surprised':
+                        // 惊讶时显示惊讶表情
+                        // 随机选择一个惊讶的表情
+                        const surprisedEmojis = ['😲', '😱', '😨', '😰', '😏', '😯', '😦', '😧', '😮', '😵', '🤯', '🙀', '😲'];
+                        emotionElement.textContent = surprisedEmojis[Math.floor(Math.random() * surprisedEmojis.length)];
+                        break;
+                    case 'neutral':
+                        // 中性/默认状态时显示默认表情
+                        // 随机选择一个中性的表情
+                        const neutralEmojis = ['😐', '😑', '😶', '😒', '🙄', '🤔', '🫤', '😐', '😑'];
+                        emotionElement.textContent = neutralEmojis[Math.floor(Math.random() * neutralEmojis.length)];
+                        break;
+                    default:
+                        // 其他未定义的情绪状态显示默认表情
+                        console.warn(`未定义的情绪状态: ${message.data.emotion}，使用默认表情`);
+                        emotionElement.textContent = '😐';
+                }
+            } else if (message.type === 'text_update') {
+                // 处理模型输出文本更新
+                const outputElement = document.getElementById('model-output');
+                outputElement.textContent = message.data.text;
+            }
+        }
+        
+        // 发送用户输入到服务器
+        function sendUserInput() {
+            const inputElement = document.getElementById('user-input');
+            const text = inputElement.value.trim();
+            
+            if (text && ws && ws.readyState === WebSocket.OPEN) {
+                const message = {
+                    action: "send_text",
+                    payload: {
+                        text: text
+                    }
+                };
+                
+                ws.send(JSON.stringify(message));
+                inputElement.value = '';
+            }
+        }
+        
+        // 页面加载完成后绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定发送按钮点击事件
+            document.getElementById('send-button').addEventListener('click', sendUserInput);
+            
+            // 绑定回车键发送
+            document.getElementById('user-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendUserInput();
+                }
+            });
+        });
+        
+        // 初始化WebSocket连接
+        connect();
+    </script>
+</body>
+</html>

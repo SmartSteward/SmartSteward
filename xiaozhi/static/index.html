@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XiaoZhi Web UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .status-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .text-display {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: 150px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        button {
+            padding: 12px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.abort {
+            background-color: #f44336;
+        }
+        button.abort:hover {
+            background-color: #d32f2f;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-connected {
+            background-color: #4CAF50;
+        }
+        .status-disconnected {
+            background-color: #f44336;
+        }
+        #text-content {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>XiaoZhi Web 控制面板</h1>
+    </div>
+    
+    <div class="status-panel">
+        <h2>状态信息</h2>
+        <div class="status-item">
+            <span>连接状态:</span>
+            <span><span class="status-indicator status-disconnected" id="connection-status"></span><span id="connection-text">未连接</span></span>
+        </div>
+        <div class="status-item">
+            <span>设备状态:</span>
+            <span id="status">待命中</span>
+        </div>
+        <div class="status-item">
+            <span>情绪状态:</span>
+            <span id="emotion">neutral</span>
+        </div>
+        <div class="status-item">
+            <span>按钮状态:</span>
+            <span id="button-status">-</span>
+        </div>
+    </div>
+    
+    <div class="text-display">
+        <h2>文本显示</h2>
+        <p id="text-content">等待连接...</p>
+    </div>
+    
+    <div class="controls">
+        <h2>控制面板</h2>
+        <button onclick="sendAction('press')">开始录音</button>
+        <button onclick="sendAction('release')">停止录音</button>
+        <button onclick="sendAction('auto_toggle')">自动模式</button>
+        <button class="abort" onclick="sendAction('abort')">中断对话</button>
+        <br>
+        <input type="text" id="text-input" placeholder="输入要发送的文本" style="padding: 10px; width: 300px; margin: 10px;">
+        <button onclick="sendText()">发送文本</button>
+    </div>
+
+    <script>
+        let ws;
+        
+        function connect() {
+            ws = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            ws.onopen = function(event) {
+                console.log("Connected to WebSocket");
+                document.getElementById('connection-status').className = 'status-indicator status-connected';
+                document.getElementById('connection-text').textContent = '已连接';
+                document.getElementById('text-content').textContent = '已连接到 XiaoZhi';
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            };
+            
+            ws.onclose = function(event) {
+                console.log("WebSocket connection closed");
+                document.getElementById('connection-status').className = 'status-indicator status-disconnected';
+                document.getElementById('connection-text').textContent = '连接已断开';
+                document.getElementById('text-content').textContent = '连接已断开，正在尝试重新连接...';
+                
+                // 尝试重新连接
+                setTimeout(connect, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.log("WebSocket error: " + error);
+            };
+        }
+        
+        function handleServerMessage(message) {
+            switch(message.type) {
+                case 'status_update':
+                    document.getElementById('status').textContent = message.data.status;
+                    break;
+                case 'emotion_update':
+                    document.getElementById('emotion').textContent = message.data.emotion;
+                    break;
+                case 'text_update':
+                    document.getElementById('text-content').textContent = message.data.text;
+                    break;
+                case 'button_status_update':
+                    document.getElementById('button-status').textContent = message.data.text;
+                    break;
+            }
+        }
+        
+        function sendAction(action, payload = {}) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const message = {
+                    action: action,
+                    payload: payload
+                };
+                ws.send(JSON.stringify(message));
+            } else {
+                alert('未连接到服务器');
+            }
+        }
+        
+        function sendText() {
+            const textInput = document.getElementById('text-input');
+            const text = textInput.value.trim();
+            if (text) {
+                sendAction('send_text', {text: text});
+                textInput.value = '';
+            }
+        }
+        
+        // 初始化连接
+        connect();
+    </script>
+</body>
+</html>
+```
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XiaoZhi Emotion Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        .emotion-container {
+            font-size: 30vw;
+            text-align: center;
+            user-select: none;
+        }
+        
+        .emotion {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="emotion-container">
+        <div id="emotion" class="emotion">😐</div>
+    </div>
+
+    <script>
+        let ws;
+        
+        function connect() {
+            ws = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            ws.onopen = function(event) {
+                console.log("Connected to WebSocket");
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("收到消息:", data);  // 添加调试日志
+                handleServerMessage(data);
+            };
+            
+            ws.onclose = function(event) {
+                console.log("WebSocket connection closed");
+                // 尝试重新连接
+                setTimeout(connect, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.log("WebSocket error: " + error);
+            };
+        }
+        
+        function handleServerMessage(message) {
+            // 根据情绪状态显示不同的表情
+            // 当接收到 emotion_update 类型的消息时，更新表情显示
+            console.log("处理消息:", message);  // 添加调试日志
+            if (message.type === 'emotion_update') {
+                const emotionElement = document.getElementById('emotion');
+                // 根据情绪状态显示不同的表情
+                switch(message.data.emotion) {
+                    case 'happy':
+                        // 高兴时显示笑脸表情
+                        emotionElement.textContent = '😊';
+                        break;
+                    case 'sad':
+                        // 伤心时显示哭脸表情
+                        emotionElement.textContent = '😢';
+                        break;
+                    case 'angry':
+                        // 生气时显示愤怒表情
+                        emotionElement.textContent = '😠';
+                        break;
+                    case 'surprised':
+                        // 惊讶时显示惊讶表情
+                        emotionElement.textContent = '😲';
+                        break;
+                    case 'neutral':
+                        // 中性/默认状态时显示默认表情
+                        emotionElement.textContent = '😐';
+                        break;
+                    default:
+                        // 其他未定义的情绪状态显示默认表情
+                        emotionElement.textContent = '😐';
+                }
+            }
+        }
+        
+        // 初始化WebSocket连接
+        connect();
+    </script>
+</body>
+</html>

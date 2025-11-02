@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XiaoZhi Emotion Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        .emotion-container {
+            font-size: 30vw;
+            text-align: center;
+            user-select: none;
+        }
+        
+        .emotion {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="emotion-container">
+        <div id="emotion" class="emotion">😐</div>
+    </div>
+
+    <script>
+        let ws;
+        
+        function connect() {
+            ws = new WebSocket(`ws://${window.location.host}/ws`);
+            
+            ws.onopen = function(event) {
+                console.log("Connected to WebSocket");
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("收到消息:", data);
+                handleServerMessage(data);
+            };
+            
+            ws.onclose = function(event) {
+                console.log("WebSocket connection closed");
+                // 尝试重新连接
+                setTimeout(connect, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.log("WebSocket error: " + error);
+            };
+        }
+        
+        function handleServerMessage(message) {
+            console.log("处理消息:", message);
+            // 根据情绪状态显示不同的表情
+            // 当接收到 emotion_update 类型的消息时，更新表情显示
+            if (message.type === 'emotion_update') {
+                const emotionElement = document.getElementById('emotion');
+                // 根据情绪状态显示不同的表情
+                switch(message.data.emotion) {
+                    case 'happy':
+                        // 高兴时显示笑脸表情
+                        emotionElement.textContent = '😊';
+                        break;
+                    case 'sad':
+                        // 伤心时显示哭脸表情
+                        emotionElement.textContent = '😢';
+                        break;
+                    case 'angry':
+                        // 生气时显示愤怒表情
+                        emotionElement.textContent = '😠';
+                        break;
+                    case 'surprised':
+                        // 惊讶时显示惊讶表情
+                        emotionElement.textContent = '😲';
+                        break;
+                    case 'neutral':
+                        // 中性/默认状态时显示默认表情
+                        emotionElement.textContent = '😐';
+                        break;
+                    default:
+                        // 其他未定义的情绪状态显示默认表情
+                        emotionElement.textContent = '😐';
+                }
+            }
+        }
+        
+        // 初始化WebSocket连接
+        connect();
+    </script>
+</body>
+</html>

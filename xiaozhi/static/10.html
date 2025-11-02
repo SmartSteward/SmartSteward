@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      overflow: hidden;
+    }
+    .box {
+      background: black;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .e-c {
+      width: 45vw;
+      display: flex;
+      justify-content: space-between;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate3d(-50%, -50%, 0);
+    }
+    .e {
+      width: 20vw;
+      height: 20vw;
+      position: relative;
+      border-radius: 50%;
+      background-color: #f7e955;
+      animation: eye 3.5s infinite;
+    }
+    .e:after {
+      content: "";
+      width: 65%;
+      height: 65%;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate3d(-50%, -50%, 0);
+      border-radius: 50%;
+      background: #000;
+      animation: eyeglobe 17.5s infinite;
+    }
+
+    @keyframes eye {
+      0%, 5%, 30%, 37%, 100% {
+        height: 20vw;
+        transform: translate3d(0, 0, 0);
+      }
+      3%, 33% {
+        height: 0;
+        transform: translate3d(0, -50%, 0);
+      }
+    }
+
+    @keyframes eyeglobe {
+      0%, 20% {
+        transform: translate3d(-100%, -50%, 0);
+      }
+      21%, 40%, 81%, 100% {
+        transform: translate3d(-50%, -50%, 0);
+      }
+      41%, 60% {
+        transform: translate3d(0%, -50%, 0);
+      }
+      61%, 80% {
+        transform: translate3d(-50%, -50%, 0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="e-c">
+      <div class="e"></div>
+      <div class="e"></div>
+    </div>
+  </div>
+</body>
+</html>
