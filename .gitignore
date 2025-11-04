@@ -1,7 +1,19 @@
+# python_environment
 .venv/
+
+# Build output
+build/
+
+# CubeMX / IDE configs
+.mxproject
+.settings/
+.clangd
+*.launch
+
+# other
 .DS_Store/
 .vscode/
 __pycache__/
 .env
 .idea/
-*.code-workspace/
+*.code-workspace
