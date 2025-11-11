@@ -11,7 +11,7 @@ venv/
 cache/
 
 
-/models
+/models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 # 打包相关
 /build

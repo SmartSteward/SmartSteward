@@ -37,7 +37,7 @@ class WebDisplay(BaseDisplay):
             @self.app.get("/emotion")
             async def get_emotion():
                 from starlette.responses import FileResponse
-                return FileResponse(os.path.join(static_dir, "10.html"))
+                return FileResponse(os.path.join(static_dir, "emotion.html"))
         else:
             # 如果没有静态文件目录，提供一个简单的根路径
             @self.app.get("/")
