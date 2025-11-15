@@ -4,11 +4,24 @@ from src.iot.thing import Parameter, Thing
 
 
 class Serial:
-    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, timeout=1):
-        self.ser = serial.Serial(port, baudrate, timeout=timeout)
+    def __init__(self, port="/dev/ttyACM0", baudrate=115200):
+        self.ser = serial.Serial(port, baudrate)
+        self.dic = {
+            "go": b"\x41",
+            # "right_forward": b"\x42",
+            "right": b"\x43",
+            # "right_backward": b"\x44",
+            "back": b"\x45",
+            # "left_backward": b"\x46",
+            "left": b"\x47",
+            # "left_forward": b"\x48",
+            "stop": b"\x5a",
+            "speedup": b"\x58",
+            "speeddown": b"\x59",
+        }
 
     def send_state(self, command: str) -> str:
-        self.ser.write(command.encode())
+        self.ser.write(self.dic[command])
 
 
 class Car(Thing):
