@@ -7,7 +7,6 @@ cryptography==44.0.1
 numpy==1.26.4
 sounddevice>=0.4.4
 pygame==2.6.1
-PyQt5
 opencv-python-headless==4.11.0.86
 soxr==0.5.0.post1
 psutil==7.0.0
@@ -37,5 +36,10 @@ pyinstaller==6.15.0
 rich==14.1.0
 packaging==25.0
 requests==2.32.3
+
+# 后续引入的库
 fastapi
 uvicorn
+pyserial
+# 这里pyqt5不指定版本，因为在树莓派上编译指定版本的速度非常慢，所以使用系统自带的版本
+PyQt5
