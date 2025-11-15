@@ -27,9 +27,11 @@ class ThingManager:
         注意：倒计时器功能已迁移到MCP工具中，提供更好的AI集成和状态反馈。
         """
         from src.iot.things.lamp import Lamp
+        from src.iot.things.smarthome import SmartHome
 
         # 添加设备
         self.add_thing(Lamp())
+        self.add_thing(SmartHome())
 
     def add_thing(self, thing: Thing) -> None:
         self.things.append(thing)
@@ -66,10 +68,7 @@ class ThingManager:
 
             if delta:
                 # 检查状态是否变化
-                is_same = (
-                    thing.name in self.last_states
-                    and self.last_states[thing.name] == state_json
-                )
+                is_same = thing.name in self.last_states and self.last_states[thing.name] == state_json
                 if is_same:
                     continue
                 changed = True
