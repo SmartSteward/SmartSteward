@@ -12,7 +12,7 @@ declare -A CMD=(
     ["speedup"]="\x58"
     ["speeddown"]="\x59"
 )
-
+# test
 if [ $# -ne 1 ]; then
     echo "用法: $0 {go|back|left|right|speedup|speeddown|stop}"
     exit 1
