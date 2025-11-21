@@ -26,10 +26,12 @@ class ThingManager:
 
         注意：倒计时器功能已迁移到MCP工具中，提供更好的AI集成和状态反馈。
         """
+        from src.iot.things.car import Car
         from src.iot.things.lamp import Lamp
         from src.iot.things.smarthome import SmartHome
 
         # 添加设备
+        self.add_thing(Car())
         self.add_thing(Lamp())
         self.add_thing(SmartHome())
 
