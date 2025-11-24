@@ -40,14 +40,15 @@ class SerialController:
             'speeddown': b'\x59',
         }
 
-    def connect(self):
+    def connect(self, logger=None):
         """Establish serial connection."""
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
             self.connected = True
             return True
         except serial.SerialException as e:
-            print(f"Failed to connect to serial port {self.port}: {e}")
+            if logger:
+                logger.error(f"Failed to connect to serial port {self.port}: {e}")
             return False
 
     def disconnect(self):
@@ -56,12 +57,13 @@ class SerialController:
             self.ser.close()
         self.connected = False
 
-    def send_command(self, command: str):
+    def send_command(self, command: str, logger=None):
         """
         Send motion command to STM32.
 
         Args:
             command: Command string (go, back, left, right, stop, speedup, speeddown)
+            logger: Optional ROS logger for error reporting
 
         Returns:
             bool: True if command sent successfully
@@ -70,14 +72,16 @@ class SerialController:
             return False
 
         if command not in self.command_map:
-            print(f"Unknown command: {command}")
+            if logger:
+                logger.warn(f"Unknown command: {command}")
             return False
 
         try:
             self.ser.write(self.command_map[command])
             return True
         except serial.SerialException as e:
-            print(f"Failed to send command: {e}")
+            if logger:
+                logger.error(f"Failed to send command: {e}")
             return False
 
 
@@ -100,7 +104,7 @@ class MotionControllerNode(Node):
 
         # Initialize serial controller
         self.serial_controller = SerialController(serial_port, baudrate)
-        if not self.serial_controller.connect():
+        if not self.serial_controller.connect(logger=self.get_logger()):
             self.get_logger().warn(
                 f'Failed to connect to serial port {serial_port}. '
                 'Will retry on command reception.'
@@ -150,7 +154,7 @@ class MotionControllerNode(Node):
         command = self._velocity_to_command(linear_x, angular_z)
 
         # Send command
-        if self.serial_controller.send_command(command):
+        if self.serial_controller.send_command(command, logger=self.get_logger()):
             with self.state_lock:
                 self.current_state = command
             self.get_logger().debug(f'Sent command: {command}')

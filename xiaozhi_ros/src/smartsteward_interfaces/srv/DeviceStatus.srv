@@ -6,4 +6,4 @@ string device_id       # Device identifier (empty string for all devices)
 # Response
 bool success           # Whether the query was successful
 string message         # Status message or error description
-DeviceState[] devices  # List of device states
+DeviceState[] devices  # List of device states (empty if query fails or no devices found)

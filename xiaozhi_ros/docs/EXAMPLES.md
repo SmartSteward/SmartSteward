@@ -434,6 +434,7 @@ groups $USER
 
 # 添加到dialout组
 sudo usermod -a -G dialout $USER
+# 注意：需要注销并重新登录（或重启）后，组成员变更才会生效
 ```
 
 ## 进阶示例
