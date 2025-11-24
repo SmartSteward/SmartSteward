@@ -41,8 +41,15 @@
 
 ### 机器人
 
-* 树莓派...
-* [py-xiaozhi](https://github.com/huangjunsen0406/py-xiaozhi)
+* 树莓派
+  * 硬件平台：Raspberry Pi
+  * 软件框架：[ROS 2](https://docs.ros.org/) (Robot Operating System)
+  * 代码目录：[xiaozhi_ros/](xiaozhi_ros/) - ROS工作空间，模块化的机器人控制系统
+  * AI客户端：[py-xiaozhi](https://github.com/huangjunsen0406/py-xiaozhi) - 原始Python实现
+* ROS功能包
+  * `motion_control` - 机器人运动控制（串口通信STM32）
+  * `iot_manager` - 智能家居设备管理
+  * `smartsteward_interfaces` - 自定义ROS消息和服务接口
 
 ### 监护人页面
 

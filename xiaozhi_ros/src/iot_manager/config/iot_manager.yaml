@@ -1,0 +1,3 @@
+iot_manager_node:
+  ros__parameters:
+    publish_rate: 1.0
