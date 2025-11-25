@@ -1,0 +1,11 @@
+# Service for controlling IoT devices
+# Request
+string device_id       # Device identifier
+string command         # Command to execute (e.g., "turn_on", "turn_off", "set_brightness")
+string[] parameters    # Command parameters as key=value strings
+
+---
+# Response
+bool success           # Whether the command was successful
+string message         # Status message or error description
+string new_state       # New state of the device after command execution
