@@ -50,7 +50,7 @@ class UIPlugin(Plugin):
             from src.display.web_display import WebDisplay
 
             self._is_gui = True
-            return WebDisplay()
+            return WebDisplay(port=43999)
         else:
             from src.display.cli_display import CliDisplay
 
