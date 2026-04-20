@@ -70,6 +70,14 @@ class UIPlugin(Plugin):
         # 启动显示
         self.app.spawn(self.display.start(), name=f"ui:{self.mode}:start")
 
+        # Web 模式：开机即自动进入自动对话模式
+        # 放在 display.start() 之后，确保 UI 已初始化再进入监听
+        # if self.mode == "web":
+        #     self.app.spawn(
+        #         self.app.start_auto_conversation(),
+        #         name="ui:web:auto_start_conversation",
+        #     )
+
     async def _setup_callbacks(self) -> None:
         """
         设置 display 回调.

@@ -1,5 +1,4 @@
 import serial
-
 from src.iot.thing import Parameter, Thing
 
 
