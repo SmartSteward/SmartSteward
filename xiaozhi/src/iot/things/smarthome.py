@@ -118,10 +118,17 @@ class LivingRoom:
 class Kitchen:
     ROOMNAME = "kitchen"
     FAN = "smarthome/kitchen/fan"
+    #fll添加厨房燃气灶
+    STOVE = "smarthome/kitchen/stove"
+    STOVE_POWER = "smarthome/kitchen/stove_power"
 
     def __init__(self, publish):
         self.publish = publish
         self.fan_state = False
+        #fll添加厨房燃气灶
+        self.stove_state = False
+        self.stove_power = 0
+
         self.led = Led(publish, Kitchen.ROOMNAME)
 
     async def set_fan_state(self, params: List[Parameter]):
@@ -129,9 +136,27 @@ class Kitchen:
         self.fan_state = state
         await self.publish(Kitchen.FAN, int(state))
         return {"status": "success", "message": "风扇状态已更新"}
+#fll添加厨房燃气灶
+    async def set_stove_state(self, params: List[Parameter]):
+        state = params["state"].get_value()
+        self.stove_state = state
+        await self.publish(Kitchen.STOVE, int(state))
+        return {"status": "success", "message": "燃气灶状态已更新"}
+#fll添加厨房燃气灶
+    async def set_stove_power(self, params: List[Parameter]):
+        power = params["power"].get_value()
+        self.stove_power = power
+        await self.publish(Kitchen.STOVE_POWER, power)
+        return {"status": "success", "message": "燃气灶火力已更新"}
 
     async def get_fan_state(self):
         return self.fan_state
+#fll添加厨房燃气灶
+    async def get_stove_state(self):
+        return self.stove_state
+#fll添加厨房燃气灶
+    async def get_stove_power(self):
+        return self.stove_power
 
 
 class Bedroom:
@@ -197,11 +222,18 @@ class SmartHome(Thing):
     def __init__(self):
         super().__init__("SmartHome", "智能家居系统")
         self.mqtt = mqtt.Client()
-        self.connect_mqtt()
+        # 先创建设备实例，这样回调可以访问 self.kitchen 等属性
         self.livingroom = LivingRoom(self.publish)
         self.kitchen = Kitchen(self.publish)
         self.bedroom = Bedroom(self.publish)
         self.bathroom = Bathroom(self.publish)
+        # 设置 MQTT 回调并连接
+        self.mqtt.on_connect = self._on_connect
+        self.mqtt.on_message = self._on_mqtt_message
+        self.connect_mqtt()
+
+        # 保存主线程的事件循环 fll测试
+        self.loop = asyncio.get_event_loop()
 
         properties = [
             ("livingroom_led_state", "客厅LED状态", self.livingroom.led.get_state),
@@ -218,6 +250,8 @@ class SmartHome(Thing):
             ("kitchen_led_mode", "厨房LED模式", self.kitchen.led.get_mode),
             ("kitchen_led_brightness", "厨房LED亮度", self.kitchen.led.get_brightness),
             ("kitchen_fan_state", "厨房风扇状态", self.kitchen.get_fan_state),
+            ("kitchen_stove_state", "厨房燃气灶状态", self.kitchen.get_stove_state),#fll添加厨房燃气灶
+            ("kitchen_stove_power", "厨房燃气灶火力", self.kitchen.get_stove_power),#fll添加厨房燃气灶
             ("bedroom_led_state", "卧室LED状态", self.bedroom.led.get_state),
             ("bedroom_led_color", "卧室LED颜色", self.bedroom.led.get_color),
             ("bedroom_led_mode", "卧室LED模式", self.bedroom.led.get_mode),
@@ -318,6 +352,18 @@ class SmartHome(Thing):
                 self.kitchen.set_fan_state,
             ),
             (
+                "set_kitchen_stove_state",#fll添加厨房燃气灶
+                "设置厨房燃气灶状态",
+                [Parameter("state", "true表示开启,false表示关闭", "boolean")],
+                self.kitchen.set_stove_state,
+            ),
+            (
+                "set_kitchen_stove_power",#fll添加厨房燃气灶
+                "设置厨房燃气灶火力",
+                [Parameter("power", "火力级别0-5", "number")],
+                self.kitchen.set_stove_power,
+            ),
+            (
                 "set_bedroom_led_state",
                 "设置卧室LED状态",
                 [Parameter("state", "true表示开启,false表示关闭", "boolean")],
@@ -406,3 +452,62 @@ class SmartHome(Thing):
         result = self.mqtt.publish(topic, msg, qos=0, retain=False)
         result.wait_for_publish()
         print(f"[MQTT] Published with message ID: {result}")
+        #fll添加测试
+    def _on_mqtt_message(self, client, userdata, msg):
+        topic = msg.topic
+        data = msg.payload.decode().strip()
+        print("\n==================================")
+        print("📥 【收到MQTT指令】", topic, "=", data)
+
+        if topic == "smarthome/kitchen/stove/set":
+            from src.iot.thing import Parameter
+            new_state = (data == "1")
+
+        # ✅ 终极修复：直接在线程里运行异步函数，绝对不报错
+            try:
+                import asyncio
+                asyncio.run_coroutine_threadsafe(
+                    self.kitchen.set_stove_state({
+                        "state": Parameter("state", "", "boolean", new_state)
+                    }),
+                    self.loop
+                )
+                print("✅ 【设备真实状态已修改】燃气灶 =", "打开" if new_state else "关闭")
+                state_topic = "smarthome/kitchen/stove"
+                state_payload = "1" if new_state else "0"
+                client.publish(state_topic, state_payload)
+                print(f"📤 【MQTT已发布状态】{state_topic} => {state_payload}")
+            except Exception as e:
+                print("❌ 执行错误：", e)
+            
+            print("==================================")
+        # 🔥 燃气灶火力调节
+        if topic == "smarthome/kitchen/stove_power/set":
+            try:
+                level = int(data)
+                if 0 <= level <= 5:
+                    from src.iot.thing import Parameter
+                    asyncio.run_coroutine_threadsafe(
+                        self.kitchen.set_stove_power([Parameter("power", "", "number", level)]),
+                        self.loop
+                    )
+                    print(f"✅ 【火力已调整】=> {level} 档")
+                    client.publish("smarthome/kitchen/stove_power", str(level))
+                    print(f"📤 【MQTT发布火力】=> {level}")
+            except Exception as e:
+                print("❌ 火力设置失败：", e)
+
+
+    def _on_connect(self, client, userdata, flags, rc):
+        print("✅ MQTT 连接成功")
+    # 订阅燃气灶控制主题
+        client.subscribe("smarthome/kitchen/stove/set")
+
+if __name__ == "__main__":
+    import asyncio
+
+    async def main():
+        smarthome = SmartHome()
+        await asyncio.Future()  # 永久运行，不会退出
+
+    asyncio.run(main())
